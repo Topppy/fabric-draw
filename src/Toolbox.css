@@ -1,0 +1,16 @@
+body {
+  width: 100vw;
+  background: grey;
+}
+
+.data {
+  word-break: break-all;
+}
+
+.activeType {
+  background: yellow;
+}
+
+#can {
+  background: #fff;
+}
