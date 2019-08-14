@@ -14,3 +14,16 @@ body {
 #can {
   background: #fff;
 }
+
+.corlorRadio {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border-radius: 50%;
+  border: solid 3px #fff;
+}
+
+.corlorRadio.active {
+  transform: scale(1.5)
+}

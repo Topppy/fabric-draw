@@ -1,12 +1,22 @@
 import React, { Component } from "react";
 import { fabric } from "fabric";
+import { GlobalHotKeys } from "react-hotkeys";
 import "./Toolbox.css";
 
 let canvas = null;
 window.fabric = fabric; // todo
 fabric.Object.prototype.transparentCorners = false;
-fabric.Object.prototype.cornerStyle = "circle";
-fabric.Object.prototype.cornerSize = 6;
+fabric.Object.prototype.strokeUniform = true;
+fabric.Object.prototype.padding = 10;
+const MAX_ZOOM = 10
+
+const keyMap = {
+  deleteNode: ["del", "backspace"],
+  D: "d",
+  V: "v",
+  Add: "=",
+  Subtract: "-",
+};
 
 const COLORS_KEY = [
   "blue",
@@ -45,17 +55,18 @@ const addBg = async url => {
 };
 
 // shape rect
-const addReact = () => {
+const addRect = ({ color, x, y }) => {
   var rect = new fabric.Rect({
-    left: 100,
-    top: 300,
+    left: x,
+    top: y,
     fill: "transparent",
-    stroke: "red",
-    width: 20,
-    height: 20,
-    angle: 45
+    stroke: color,
+    strokeWidth: 5,
+    width: 1,
+    height: 1
   });
   canvas.add(rect);
+  return rect;
 };
 
 // text
@@ -76,35 +87,7 @@ const addPencil = (width, color) => {
   canvas.freeDrawingBrush.color = color;
 };
 
-async function init(setData) {
-  canvas = new fabric.Canvas("can", {
-    centeredScaling: true, // 中心缩放
-    isDrawingMode: true,
-    hoverCursor: "pointer"
-  });
-  window.canvas = canvas;
-  await addBg();
-  // 初始数据
-  setData(JSON.stringify(canvas));
-  // 更新数据
-  canvas.on("mouse:up", () => {
-    setData(JSON.stringify(canvas));
-    window.data = JSON.stringify(canvas);
-  });
-  // 缩放画布
-  canvas.on("mouse:wheel", function(opt) {
-    var delta = opt.e.deltaY;
-    var zoom = canvas.getZoom();
-    zoom = zoom + delta / 200;
-    if (zoom > 20) zoom = 20;
-    if (zoom < 0.01) zoom = 0.01;
-    canvas.setZoom(zoom);
-    opt.e.preventDefault();
-    opt.e.stopPropagation();
-  });
-}
-
-class App extends Component {
+class Toolbox extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -112,15 +95,23 @@ class App extends Component {
       type: "draw",
       penSize: 20,
       penColor: COLORS.black,
-      zoom: 1
+      zoom: 1,
+      hasSelected: false,
+      history: []
     };
+    this.drawingShape = null;
   }
 
-  componentDidUpdate() {}
+  componentDidUpdate(pp, ps) {
+    // console.log(ps.type, this.state.type)
+    // if(this.state.type !== 'select') {
+    //   canvas.discardActiveObject();
+    // }
+  }
 
   async componentDidMount() {
     const { penSize, penColor } = this.state;
-    await init(this.setData);
+    await this.initCanvas();
     addPencil(penSize, penColor);
   }
 
@@ -132,8 +123,13 @@ class App extends Component {
   };
 
   setData = data => {
-    this.setState({
-      jsonData: data
+    this.setState(state => {
+      const { history } = state;
+      history.push(data);
+      return {
+        jsonData: data,
+        history: history
+      };
     });
   };
 
@@ -143,10 +139,116 @@ class App extends Component {
       penSize: size
     });
   };
+
+  initCanvas = async setState => {
+    canvas = new fabric.Canvas("can", {
+      centeredScaling: true, // 中心缩放
+      isDrawingMode: true,
+      hoverCursor: "pointer"
+    });
+    window.canvas = canvas;
+    await addBg();
+    // 初始数据
+    this.setData(JSON.stringify(canvas));
+
+    // 选中
+    canvas.on("selection:created", opt => {
+      if (this.drawingShape) {
+        canvas.discardActiveObject();
+        return;
+      }
+      this.setState({ hasSelected: true, type: "select" });
+    });
+    // 无选中
+    canvas.on("selection:cleared", opt => {
+      this.setState({ hasSelected: false });
+    });
+    // mouse:down
+    canvas.on("mouse:down", e => {
+      const { type, penColor } = this.state;
+      if (type === "rect") {
+        const [x, y] = Object.values(e.pointer).map(
+          val => val / canvas.getZoom()
+        );
+        this.drawingShape = addRect({
+          color: penColor,
+          x: x,
+          y: y
+        });
+      }
+    });
+    canvas.on("mouse:move", e => {
+      const { type } = this.state;
+      if (type === "rect" && this.drawingShape) {
+        const left = this.drawingShape.get("left");
+        const top = this.drawingShape.get("top");
+        const width = this.drawingShape.get("width");
+        const height = this.drawingShape.get("height");
+        const [x, y] = Object.values(e.pointer).map(
+          val => val / canvas.getZoom()
+        );
+        this.drawingShape.set({
+          width: x - left > 0 ? x - left : width + left - x,
+          height: y - top > 0 ? y - top : height + top - y,
+          left: x - left > 0 ? left : x,
+          top: y - top > 0 ? top : y
+        });
+        canvas.requestRenderAll();
+      }
+    });
+
+    canvas.on("mouse:up", e => {
+      const { type } = this.state;
+      // 更新数据
+      this.setData(JSON.stringify(canvas));
+      if (type === "rect" && this.drawingShape) {
+        canvas.setActiveObject(this.drawingShape);
+        canvas.discardActiveObject();
+        // bugfix rect select error
+        canvas.setZoom(canvas.getZoom());
+        this.drawingShape = null;
+      }
+    });
+  };
+
+  getActiveClass(type) {
+    return type === "draw" ? "activeType" : "";
+  }
+
+  handlers = {
+    deleteNode() {
+      canvas.discardActiveObject();
+      const activeObjects = canvas.getActiveObjects();
+      activeObjects.forEach(obj => canvas.remove(obj));
+    },
+    moveUp: event => console.log("Move up hotkey called!"),
+    D() {
+      this.setType("draw");
+      canvas.discardActiveObject();
+      canvas.renderAll();
+    },
+    V() {
+      this.setType("select");
+    },
+    Add() {
+      canvas.setZoom(Math.min(MAX_ZOOM, canvas.getZoom() + 1))
+    },
+    Subtract(){
+      canvas.setZoom(Math.max(1, canvas.getZoom() - 1))
+    }
+  };
+
   render() {
-    const { jsonData, type, penSize, penColor } = this.state;
+    const {
+      jsonData,
+      type,
+      penSize,
+      penColor,
+      hasSelected,
+      history
+    } = this.state;
     return (
-      <div className="App">
+      <GlobalHotKeys handlers={this.handlers} keyMap={keyMap}>
         <a
           href={URL.createObjectURL(new Blob([jsonData]))}
           download="fabric.json"
@@ -155,6 +257,12 @@ class App extends Component {
         </a>
         <section>
           <h3>工具栏</h3>
+          <button
+            onClick={() => this.setType("rect")}
+            className={type === "rect" ? "activeType" : ""}
+          >
+            矩形
+          </button>
           <button
             onClick={() => this.setType("draw")}
             className={type === "draw" ? "activeType" : ""}
@@ -167,6 +275,30 @@ class App extends Component {
           >
             选择
           </button>
+          <button disabled={!hasSelected} onClick={this.deleteNodes}>
+            删除
+          </button>
+          <button
+            onClick={() => {
+              canvas.getObjects().forEach(obj => canvas.remove(obj));
+            }}
+          >
+            清空
+          </button>
+          <button
+            disabled={history.length < 2}
+            onClick={() => {
+              if (history.length > 1) {
+                history.pop();
+                const cur = history[history.length - 1];
+                this.setState({ jsonData: cur, history: history });
+                // 这个效果不好，loadbg要好久
+                canvas.loadFromJSON(cur);
+              }
+            }}
+          >
+            撤销
+          </button>
           {type === "draw" && (
             <div className="subbox">
               <label>
@@ -176,24 +308,37 @@ class App extends Component {
                   min="1"
                   max="100"
                   value={penSize}
-                  // class="slider"
                   onChange={e => {
                     this.setPenSize(parseInt(e.target.value, 10));
                   }}
                 />
               </label>
               <p>
-                颜色：<span className={penColor}>{penColor}</span>
-                {}
+                颜色：
+                {Object.keys(COLORS).map(clr => (
+                  <span
+                    className={`corlorRadio ${
+                      penColor === clr ? "active" : ""
+                    }`}
+                    style={{ background: clr }}
+                    key={clr}
+                    onClick={() => {
+                      canvas.freeDrawingBrush.color = clr;
+                      this.setState({
+                        penColor: clr
+                      });
+                    }}
+                  />
+                ))}
               </p>
             </div>
           )}
         </section>
         <h2>JSON data：</h2>
         <div className="data">{jsonData}</div>
-      </div>
+      </GlobalHotKeys>
     );
   }
 }
 
-export default React.memo(App);
+export default Toolbox;
