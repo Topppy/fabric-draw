@@ -7,6 +7,11 @@ body {
   word-break: break-all;
 }
 
+.toolbox {
+  width: 140px;
+  overflow: auto;
+}
+
 .activeType {
   background: yellow;
 }
@@ -19,7 +24,7 @@ body {
   display: inline-block;
   width: 20px;
   height: 20px;
-  margin-right: 10px;
+  margin: 0 10px 10px 0;
   border-radius: 50%;
   border: solid 3px #fff;
 }

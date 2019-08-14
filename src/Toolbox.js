@@ -8,14 +8,14 @@ window.fabric = fabric; // todo
 fabric.Object.prototype.transparentCorners = false;
 fabric.Object.prototype.strokeUniform = true;
 fabric.Object.prototype.padding = 10;
-const MAX_ZOOM = 10
+const MAX_ZOOM = 10;
 
 const keyMap = {
   deleteNode: ["del", "backspace"],
   D: "d",
   V: "v",
   Add: "=",
-  Subtract: "-",
+  Subtract: "-"
 };
 
 const COLORS_KEY = [
@@ -217,9 +217,10 @@ class Toolbox extends Component {
 
   handlers = {
     deleteNode() {
-      canvas.discardActiveObject();
       const activeObjects = canvas.getActiveObjects();
       activeObjects.forEach(obj => canvas.remove(obj));
+      canvas.discardActiveObject();
+      canvas.renderAll();
     },
     moveUp: event => console.log("Move up hotkey called!"),
     D() {
@@ -231,10 +232,10 @@ class Toolbox extends Component {
       this.setType("select");
     },
     Add() {
-      canvas.setZoom(Math.min(MAX_ZOOM, canvas.getZoom() + 1))
+      canvas.setZoom(Math.min(MAX_ZOOM, canvas.getZoom() + 1));
     },
-    Subtract(){
-      canvas.setZoom(Math.max(1, canvas.getZoom() - 1))
+    Subtract() {
+      canvas.setZoom(Math.max(1, canvas.getZoom() - 1));
     }
   };
 
@@ -249,93 +250,95 @@ class Toolbox extends Component {
     } = this.state;
     return (
       <GlobalHotKeys handlers={this.handlers} keyMap={keyMap}>
-        <a
-          href={URL.createObjectURL(new Blob([jsonData]))}
-          download="fabric.json"
-        >
-          保存JSON
-        </a>
-        <section>
-          <h3>工具栏</h3>
-          <button
-            onClick={() => this.setType("rect")}
-            className={type === "rect" ? "activeType" : ""}
-          >
-            矩形
-          </button>
-          <button
-            onClick={() => this.setType("draw")}
-            className={type === "draw" ? "activeType" : ""}
-          >
-            画笔
-          </button>
-          <button
-            onClick={() => this.setType("select")}
-            className={type === "select" ? "activeType" : ""}
-          >
-            选择
-          </button>
-          <button disabled={!hasSelected} onClick={this.deleteNodes}>
-            删除
-          </button>
-          <button
-            onClick={() => {
-              canvas.getObjects().forEach(obj => canvas.remove(obj));
-            }}
-          >
-            清空
-          </button>
-          <button
-            disabled={history.length < 2}
-            onClick={() => {
-              if (history.length > 1) {
-                history.pop();
-                const cur = history[history.length - 1];
-                this.setState({ jsonData: cur, history: history });
-                // 这个效果不好，loadbg要好久
-                canvas.loadFromJSON(cur);
-              }
-            }}
-          >
-            撤销
-          </button>
-          {type === "draw" && (
-            <div className="subbox">
-              <label>
-                大小：{penSize}
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={penSize}
-                  onChange={e => {
-                    this.setPenSize(parseInt(e.target.value, 10));
-                  }}
-                />
-              </label>
-              <p>
-                颜色：
-                {Object.keys(COLORS).map(clr => (
-                  <span
-                    className={`corlorRadio ${
-                      penColor === clr ? "active" : ""
-                    }`}
-                    style={{ background: clr }}
-                    key={clr}
-                    onClick={() => {
-                      canvas.freeDrawingBrush.color = clr;
-                      this.setState({
-                        penColor: clr
-                      });
+        <div className="toolbox">
+          <section>
+            <h3>工具栏</h3>
+            <button
+              onClick={() => this.setType("rect")}
+              className={type === "rect" ? "activeType" : ""}
+            >
+              矩形
+            </button>
+            <button
+              onClick={() => this.setType("draw")}
+              className={type === "draw" ? "activeType" : ""}
+            >
+              画笔
+            </button>
+            <button
+              onClick={() => this.setType("select")}
+              className={type === "select" ? "activeType" : ""}
+            >
+              选择
+            </button>
+            <button disabled={!hasSelected} onClick={this.deleteNodes}>
+              删除
+            </button>
+            <button
+              onClick={() => {
+                canvas.getObjects().forEach(obj => canvas.remove(obj));
+              }}
+            >
+              清空
+            </button>
+            <button
+              disabled={history.length < 2}
+              onClick={() => {
+                if (history.length > 1) {
+                  history.pop();
+                  const cur = history[history.length - 1];
+                  this.setState({ jsonData: cur, history: history });
+                  // 这个效果不好，loadbg要好久
+                  canvas.loadFromJSON(cur);
+                }
+              }}
+            >
+              撤销
+            </button>
+            {type === "draw" && (
+              <div className="subbox">
+                <label>
+                  <h4> 大小：{penSize}</h4>
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    value={penSize}
+                    onChange={e => {
+                      this.setPenSize(parseInt(e.target.value, 10));
                     }}
                   />
-                ))}
-              </p>
-            </div>
-          )}
-        </section>
-        <h2>JSON data：</h2>
-        <div className="data">{jsonData}</div>
+                </label>
+              </div>
+            )}
+          </section>
+          <h3> 颜色：</h3>
+          <p>
+            {Object.keys(COLORS).map(clr => (
+              <span
+                className={`corlorRadio ${penColor === clr ? "active" : ""}`}
+                style={{ background: clr }}
+                key={clr}
+                onClick={() => {
+                  canvas.freeDrawingBrush.color = clr;
+                  this.setState({
+                    penColor: clr
+                  });
+                }}
+              />
+            ))}
+          </p>
+          <h3>
+            JSON data：{" "}
+          </h3>
+          <a
+              href={URL.createObjectURL(new Blob([jsonData]))}
+              download="fabric.json"
+            >
+              保存JSON
+            </a>
+          <div className="data">{jsonData}</div>
+        </div>
       </GlobalHotKeys>
     );
   }

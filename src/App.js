@@ -1,11 +1,12 @@
 import React from "react";
 import Toolbox from "./Toolbox";
+import './App.css'
 
 function App() {
   return (
-    <div>
+    <div className="App">
       <Toolbox />
-      <canvas width="400" height="600" id="can" />
+      <canvas width="900" height="1200" id="can" />
     </div>
   );
 }
