@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/fabric-draw/static/css/main.79af3333.chunk.css",
+    "main.js": "/fabric-draw/static/js/main.18657e14.chunk.js",
+    "main.js.map": "/fabric-draw/static/js/main.18657e14.chunk.js.map",
+    "runtime~main.js": "/fabric-draw/static/js/runtime~main.0f179c1b.js",
+    "runtime~main.js.map": "/fabric-draw/static/js/runtime~main.0f179c1b.js.map",
+    "static/js/2.ef01c3ee.chunk.js": "/fabric-draw/static/js/2.ef01c3ee.chunk.js",
+    "static/js/2.ef01c3ee.chunk.js.map": "/fabric-draw/static/js/2.ef01c3ee.chunk.js.map",
+    "index.html": "/fabric-draw/index.html",
+    "precache-manifest.91f6ef6e2e10d51ebbc0de3d227e4095.js": "/fabric-draw/precache-manifest.91f6ef6e2e10d51ebbc0de3d227e4095.js",
+    "service-worker.js": "/fabric-draw/service-worker.js",
+    "static/css/main.79af3333.chunk.css.map": "/fabric-draw/static/css/main.79af3333.chunk.css.map"
+  }
+}
