@@ -223,12 +223,12 @@ class Toolbox extends Component {
       canvas.renderAll();
     },
     moveUp: event => console.log("Move up hotkey called!"),
-    D() {
+    D: () => {
       this.setType("draw");
       canvas.discardActiveObject();
       canvas.renderAll();
     },
-    V() {
+    V: () => {
       this.setType("select");
     },
     Add() {
@@ -328,15 +328,21 @@ class Toolbox extends Component {
               />
             ))}
           </p>
-          <h3>
-            JSON data：{" "}
-          </h3>
+          <h3>快捷键</h3>
+          <ul>
+            <li>删除: ["del", "backspace"] </li>
+            <li> 画笔: "d" </li>
+            <li> 选择: "v" </li>
+            <li> 缩小: "-" </li>
+            <li> 放大: "+" </li>
+          </ul>
+          <h3>JSON data： </h3>
           <a
-              href={URL.createObjectURL(new Blob([jsonData]))}
-              download="fabric.json"
-            >
-              保存JSON
-            </a>
+            href={URL.createObjectURL(new Blob([jsonData]))}
+            download="fabric.json"
+          >
+            保存JSON
+          </a>
           <div className="data">{jsonData}</div>
         </div>
       </GlobalHotKeys>
