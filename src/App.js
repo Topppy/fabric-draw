@@ -4,9 +4,11 @@ import './App.css'
 
 function App() {
   return (
-    <div className="App">
+    <div className="App" >
       <Toolbox />
-      <canvas width="900" height="1200" id="can" />
+      <div className="canContainer">
+        <canvas width="900" height="900" id="can" />
+      </div>
     </div>
   );
 }
