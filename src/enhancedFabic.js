@@ -87,4 +87,7 @@ fabric.LineArrow.fromObject = function fromObject(object, callback) {
 
 fabric.LineArrow.async = true;
 
+// fabric.Object.prototype.strokeUniform = true;
+// fabric.Object.prototype.padding = 10;
+
 export default fabric;
